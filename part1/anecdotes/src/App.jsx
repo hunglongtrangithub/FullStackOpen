@@ -29,8 +29,8 @@ const App = () => {
 
   return (
     <div>
-      {anecdotes[selected]}<br/>
-      has {votes[selected]} votes<br/>
+      {anecdotes[selected]}<br />
+      has {votes[selected]} votes<br />
       <button onClick={incrementVote}>vote</button>
       <button onClick={randomAnecdote}>next anecdote</button>
     </div>
