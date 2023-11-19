@@ -1,66 +1,54 @@
-const Part = (part) => {
-  return <p>{part.part} {part.excercises}</p>
-}
+import { useState } from 'react'
 
-const Header = (course) => {
-  return <h1>{course.course}</h1>
-}
 
-const Content = (parts) => {
+const StatisticLine = ({ text, value }) => (
+  <tr>
+    <td>{text}</td>
+    <td>{value}</td>
+  </tr>
+)
+
+
+const Statistics = ({ good, neutral, bad }) => {
+  if (good + neutral + bad === 0)
+    return <div>No feedback given</div>
+
+  const all = good + bad + neutral
+  const average = ((good - bad) / all).toFixed(1)
+  const positive = `${(good / all * 100).toFixed(1)} %`
   return (
-    <div>
-      <Part part={parts.part1} excercises={parts.exercises1}/>
-      <Part part={parts.part2} excercises={parts.exercises2}/>
-      <Part part={parts.part3} excercises={parts.exercises3}/>
-    </div>
+    <table>
+      <tbody>
+        <StatisticLine text={'good'} value={good} />
+        <StatisticLine text={'neutral'} value={neutral} />
+        <StatisticLine text={'bad'} value={bad} />
+        <StatisticLine text={'all'} value={all} />
+        <StatisticLine text={'average'} value={average} />
+        <StatisticLine text={'positive'} value={positive} />
+      </tbody>
+    </table>
   )
 }
 
-const Total = (excercises) => {
-  return (
-    <p>
-      Number of exercises {
-        excercises.exercises1 + excercises.exercises2 + excercises.exercises3
-      }
-    </p>
-  )
-}
+
+const Button = ({ handleClick, crit }) =>
+  <button onClick={handleClick}>{crit}</button>
+
+
 const App = () => {
-  const course = {
-    name: 'Half Stack application development',
-    parts: [
-      {
-        name: 'Fundamentals of React',
-        exercises: 10
-      },
-      {
-        name: 'Using props to pass data',
-        exercises: 7
-      },
-      {
-        name: 'State of a component',
-        exercises: 14
-      }
-    ]
-  }
+  const [good, setGood] = useState(0)
+  const [neutral, setNeutral] = useState(0)
+  const [bad, setBad] = useState(0)
 
   return (
-    <div>
-      <Header course={course.name} />
-      <Content 
-        part1={course.parts[0].name}
-        part2={course.parts[1].name}
-        part3={course.parts[2].name}
-        exercises1={course.parts[0].exercises}
-        exercises2={course.parts[1].exercises}
-        exercises3={course.parts[2].exercises}
-      />
-      <Total 
-        exercises1={course.parts[0].exercises} 
-        exercises2={course.parts[1].exercises}
-        exercises3={course.parts[2].exercises}
-      />
-    </div>
+    <>
+      <h1>give feedback</h1>
+      <Button handleClick={() => setGood(good + 1)} crit={'good'} />
+      <Button handleClick={() => setNeutral(neutral + 1)} crit={'neutral'} />
+      <Button handleClick={() => setBad(bad + 1)} crit={'bad'} />
+      <h1>statistics</h1>
+      <Statistics good={good} neutral={neutral} bad={bad} />
+    </>
   )
 }
 
