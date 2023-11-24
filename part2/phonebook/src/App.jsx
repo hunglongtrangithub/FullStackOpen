@@ -15,13 +15,15 @@ const App = () => {
   const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
-    personService.getAllPersons().then((response) => {
-      setPersons(response.data);
-    });
+    personService.getAllPersons().then((response) => setPersons(response));
   }, []);
 
   const addPerson = (event) => {
     event.preventDefault();
+    if (newName === "") {
+      alert("Name cannot be empty");
+      return;
+    }
     const names = persons.map((person) => person.name);
     if (names.includes(newName)) {
       const message = `${newName} is already added to phonebook, replace the old number with a new one?`;

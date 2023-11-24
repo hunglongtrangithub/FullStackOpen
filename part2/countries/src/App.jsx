@@ -10,7 +10,7 @@ function App() {
 
   useEffect(() => {
     countryService.getAllCountries().then((response) => {
-      setCountryList(response.data);
+      setCountryList(response);
       setIsLoading(false);
     });
   }, []);
