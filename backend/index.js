@@ -63,7 +63,6 @@ app.post("/api/notes", (request, response) => {
 
 app.put("/api/notes/:id", (request, response, next) => {
   const id = request.params.id;
-  const body = request.body;
 
   if (body.content === undefined) {
     return response.status(400).json({
@@ -76,7 +75,11 @@ app.put("/api/notes/:id", (request, response, next) => {
     important: body.important || false,
   };
 
-  Note.findByIdAndUpdate(id, note, { new: true })
+  Note.findByIdAndUpdate(id, note, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
     .then((updatedNote) => {
       response.json(updatedNote);
     })
