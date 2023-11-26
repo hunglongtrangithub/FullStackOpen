@@ -6,7 +6,7 @@ const getAllPersons = () => {
 };
 
 const addPerson = (newPerson) => {
-  return axios.post(baseUrl, newPerson);
+  return axios.post(baseUrl, newPerson).then((response) => response.data);
 };
 
 const deletePerson = (personId) => {
@@ -14,7 +14,9 @@ const deletePerson = (personId) => {
 };
 
 const replacePerson = (oldPersonId, newPerson) => {
-  return axios.put(`${baseUrl}/${oldPersonId}`, newPerson);
+  return axios
+    .put(`${baseUrl}/${oldPersonId}`, newPerson)
+    .then((response) => response.data);
 };
 
 export default { getAllPersons, addPerson, deletePerson, replacePerson };

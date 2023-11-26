@@ -20,8 +20,8 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault();
-    if (newName === "") {
-      alert("Name cannot be empty");
+    if (newName === "" || newNumber === "") {
+      alert("Name and number cannot be empty");
       return;
     }
     const names = persons.map((person) => person.name);
@@ -34,14 +34,15 @@ const App = () => {
         const newPerson = {
           name: newName,
           number: newNumber,
-          id: oldPersonId,
         };
+        console.log(oldPersonId, newPerson);
         personService
           .replacePerson(oldPersonId, newPerson)
-          .then((response) => {
+          .then((updatedPerson) => {
+            console.log(updatedPerson);
             setPersons(
               persons.map((person) =>
-                person.id !== oldPersonId ? person : newPerson
+                person.id !== oldPersonId ? person : updatedPerson
               )
             );
             setNewName("");
@@ -65,10 +66,9 @@ const App = () => {
       const newPerson = {
         name: newName,
         number: newNumber,
-        id: persons.length + 1,
       };
-      personService.addPerson(newPerson).then((response) => {
-        setPersons(persons.concat(newPerson));
+      personService.addPerson(newPerson).then((savedPerson) => {
+        setPersons(persons.concat(savedPerson));
         setNewName("");
         setNewNumber("");
         setSuccessMessage(`Added ${newName}`);
