@@ -21,7 +21,7 @@ const App = () => {
   const addPerson = (event) => {
     event.preventDefault();
     if (newName === "" || newNumber === "") {
-      alert("Name and number cannot be empty");
+      alert("Name or number cannot be empty");
       return;
     }
     const names = persons.map((person) => person.name);
@@ -53,13 +53,11 @@ const App = () => {
             }, 5000);
           })
           .catch((error) => {
-            setErrorMessage(
-              `Information of ${newName} has already been removed from server`
-            );
+            console.log(error.response.data.error);
+            setErrorMessage(error.response.data.error);
             setTimeout(() => {
               setErrorMessage(null);
             }, 5000);
-            setPersons(persons.filter((person) => person.id !== oldPersonId));
           });
       }
     } else {
@@ -67,15 +65,24 @@ const App = () => {
         name: newName,
         number: newNumber,
       };
-      personService.addPerson(newPerson).then((savedPerson) => {
-        setPersons(persons.concat(savedPerson));
-        setNewName("");
-        setNewNumber("");
-        setSuccessMessage(`Added ${newName}`);
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 5000);
-      });
+      personService
+        .addPerson(newPerson)
+        .then((savedPerson) => {
+          setPersons(persons.concat(savedPerson));
+          setNewName("");
+          setNewNumber("");
+          setSuccessMessage(`Added ${newName}`);
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 5000);
+        })
+        .catch((error) => {
+          console.log(error.response.data.error);
+          setErrorMessage(error.response.data.error);
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 5000);
+        });
     }
   };
 
@@ -87,9 +94,8 @@ const App = () => {
         setPersons(persons.filter((person) => person.id !== personId));
       })
       .catch((error) => {
-        setErrorMessage(
-          `Information of ${newName} has already been removed from server`
-        );
+        console.log(error.response.data.error);
+        setErrorMessage(error.response.data.error);
         setTimeout(() => {
           setErrorMessage(null);
         }, 5000);
