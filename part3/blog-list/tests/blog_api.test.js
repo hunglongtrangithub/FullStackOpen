@@ -2,7 +2,9 @@ const mongoose = require("mongoose");
 const supertest = require("supertest");
 const app = require("../app");
 const Blog = require("../models/blog");
+const User = require("../models/user");
 const api = supertest(app);
+const bcrypt = require("bcrypt");
 
 const initialBlogs = [
   {
@@ -19,28 +21,57 @@ const initialBlogs = [
   },
 ];
 
+let token;
+
 beforeEach(async () => {
+  await User.deleteMany({});
   await Blog.deleteMany({});
-  await Blog.insertMany(initialBlogs.map((blog) => new Blog(blog)));
+
+  // Create a user
+  const passwordHash = await bcrypt.hash("testpassword", 10);
+  const user = new User({
+    name: "Test User",
+    username: "testuser",
+    passwordHash,
+  });
+  await user.save();
+
+  // Log in to get a token
+  const response = await api
+    .post("/api/login")
+    .send({ username: "testuser", password: "testpassword" });
+
+  token = response.body.token;
+
+  // Insert initial blogs with the user reference
+  const blogObjects = initialBlogs.map(
+    (blog) => new Blog({ ...blog, user: user._id })
+  );
+  const promiseArray = blogObjects.map((blog) => blog.save());
+  await Promise.all(promiseArray);
 });
 
-describe("GET", () => {
+describe("/api/blogs GET", () => {
   test("returns the correct amount of blog posts in the JSON format", async () => {
-    const response = await api.get("/api/blogs");
+    const response = await api
+      .get("/api/blogs")
+      .set("Authorization", `Bearer ${token}`);
 
     expect(response.body).toHaveLength(initialBlogs.length);
     expect(response.type).toBe("application/json");
   });
 
   test("verifies that the unique identifier property of the blog posts is named id", async () => {
-    const response = await api.get("/api/blogs");
+    const response = await api
+      .get("/api/blogs")
+      .set("Authorization", `Bearer ${token}`);
 
     expect(response.body).toHaveLength(initialBlogs.length);
     expect(response.body[0].id).toBeDefined();
   });
 });
 
-describe("POST", () => {
+describe("/api/blogs POST", () => {
   test("a valid blog post can be added ", async () => {
     const newBlog = {
       title: "New Blog",
@@ -51,16 +82,16 @@ describe("POST", () => {
 
     await api
       .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
-    const response = await api.get("/api/blogs");
+    const blogsAtEnd = await Blog.find({});
+    expect(blogsAtEnd).toHaveLength(initialBlogs.length + 1);
 
-    expect(response.body).toHaveLength(initialBlogs.length + 1);
-
-    const contents = response.body.map((r) => r.title);
-    expect(contents).toContain("New Blog");
+    const titles = blogsAtEnd.map((r) => r.title);
+    expect(titles).toContain("New Blog");
   });
 
   test("if likes property is missing, it defaults to 0", async () => {
@@ -73,11 +104,12 @@ describe("POST", () => {
     await api
       .post("/api/blogs")
       .send(newBlogWithoutLikes)
+      .set("Authorization", `Bearer ${token}`)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
-    const response = await api.get("/api/blogs");
-    const createdBlog = response.body.find(
+    const blogsAtEnd = await Blog.find({});
+    const createdBlog = blogsAtEnd.find(
       (blog) => blog.title === "Blog Without Likes"
     );
 
@@ -90,7 +122,11 @@ describe("POST", () => {
       url: "http://blogwithnotitle.com",
       likes: 5,
     };
-    await api.post("/api/blogs").send(blogWithoutTitle).expect(400);
+    await api
+      .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
+      .send(blogWithoutTitle)
+      .expect(400);
   });
 
   test("responds with 400 Bad Request if url is missing", async () => {
@@ -99,16 +135,37 @@ describe("POST", () => {
       author: "Author",
       likes: 5,
     };
-    await api.post("/api/blogs").send(blogWithoutUrl).expect(400);
+    await api
+      .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
+      .send(blogWithoutUrl)
+      .expect(400);
+  });
+
+  test("blog cannot be added without a token", async () => {
+    const newBlog = {
+      title: "Unauthorized Blog",
+      author: "No Author",
+      url: "http://unauthorizedblog.com",
+      likes: 0,
+    };
+
+    await api.post("/api/blogs").send(newBlog).expect(401);
+
+    const blogsAtEnd = await Blog.find({});
+    expect(blogsAtEnd).toHaveLength(initialBlogs.length);
   });
 });
 
-describe("DELETE", () => {
+describe("/api/blogs DELETE", () => {
   test("a blog can be deleted", async () => {
     const blogsBeforeDelete = await Blog.find({});
     const blogToDelete = blogsBeforeDelete[0];
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
 
     const blogsAtEnd = await Blog.find({});
     expect(blogsAtEnd).toHaveLength(initialBlogs.length - 1);
@@ -118,7 +175,7 @@ describe("DELETE", () => {
   });
 });
 
-describe("PUT", () => {
+describe("/api/blogs PUT", () => {
   test("successfully updates a blog post", async () => {
     const initialBlog = await Blog.findOne({});
 
@@ -132,6 +189,7 @@ describe("PUT", () => {
     await api
       .put(`/api/blogs/${initialBlog.id}`)
       .send(updatedData)
+      .set("Authorization", `Bearer ${token}`)
       .expect(200)
       .expect("Content-Type", /application\/json/);
 
@@ -153,6 +211,7 @@ describe("PUT", () => {
     await api
       .put(`/api/blogs/${initialBlogs[0].id}`)
       .send(blogWithoutTitle)
+      .set("Authorization", `Bearer ${token}`)
       .expect(400);
   });
 
@@ -165,8 +224,80 @@ describe("PUT", () => {
 
     await api
       .put(`/api/blogs/${initialBlogs[0].id}`)
+      .set("Authorization", `Bearer ${token}`)
       .send(blogWithoutUrl)
       .expect(400);
+  });
+});
+
+describe("/api/users POST", () => {
+  test("create & save user successfully, then tries to create a user with the same username which should fail", async () => {
+    const user = new User({
+      username: "test",
+      name: "test",
+      passwordHash: "test",
+    });
+    const savedUser = await user.save();
+
+    const result = await api
+      .post("/api/users")
+      .send({
+        username: "test",
+        name: "test",
+        password: "test",
+      })
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+    expect(result.body.error).toContain("validation failed: username: Error");
+  });
+
+  test("fails with status 400 and proper message if password is too short", async () => {
+    const usersAtStart = await User.find({});
+
+    const newUser = {
+      username: "testuser",
+      name: "Test User",
+      password: "pw", // intentionally short password
+    };
+
+    const result = await api
+      .post("/api/users")
+      .send(newUser)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    expect(result.body.error).toContain(
+      "password must be at least 3 characters long"
+    );
+
+    const usersAtEnd = await User.find({});
+    expect(usersAtEnd).toHaveLength(usersAtStart.length);
+  });
+
+  test("fails with status 400 and proper message if username is too short", async () => {
+    const usersAtStart = await User.find({});
+
+    const newUser = {
+      username: "tu", // intentionally short username
+      name: "Test User",
+      password: "password",
+    };
+
+    const result = await api
+      .post("/api/users")
+      .send(newUser)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    expect(result.body.error).toContain(
+      "username must be at least 3 characters long"
+    );
+
+    const usersAtEnd = await User.find({});
+    expect(usersAtEnd).toHaveLength(usersAtStart.length);
   });
 });
 

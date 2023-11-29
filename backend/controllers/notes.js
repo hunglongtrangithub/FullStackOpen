@@ -12,7 +12,7 @@ const getTokenFrom = (request) => {
 };
 
 notesRouter.get("/", async (request, response) => {
-  const notes = await Note.find({});
+  const notes = await Note.find({}).populate("user", { username: 1, name: 1 });
   response.json(notes);
 });
 
@@ -31,6 +31,7 @@ notesRouter.post("/", async (request, response) => {
   if (!decodedToken.id) {
     return response.status(401).json({ error: "token invalid" });
   }
+  // const decodedToken = { id: body.userId };
   const user = await User.findById(decodedToken.id);
 
   const note = new Note({
