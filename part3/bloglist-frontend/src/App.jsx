@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Notification from "./components/Notification";
+import Togglable from "./components/Togglable";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
@@ -11,13 +12,27 @@ const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState(null);
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [url, setUrl] = useState("");
+  const [user, setUser] = useState(null); // user state is used to determine whether the user is logged in or not
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  const noteFormRef = useRef(null); // noteFormRef is a reference to the Togglable component in the BlogForm component to be used to toggle the visibility of the BlogForm component
+  // retrieve the blog list from the server
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem("loggedBlogAppUser");
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON);
+      setUser(user);
+      blogService.setToken(user.token);
+      blogService.getAll().then((blogs) => setBlogs(blogs));
+    }
+  }, []);
+
+  const addBlog = (blog) => {
+    setBlogs([...blogs, blog]);
+  };
+
+  // retrieve the blog list from the server
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
@@ -37,26 +52,18 @@ const App = () => {
     }
   };
 
-  const handleCreate = async (event) => {
+  const handleLogout = () => {
+    window.localStorage.removeItem("loggedBlogAppUser");
+    setUser(null);
+  };
+
+  const incrementLike = async (id) => {
+    const blog = blogs.find((blog) => blog.id === id);
+    const updatedBlog = { ...blog, likes: blog.likes + 1 };
     try {
-      event.preventDefault();
-      const newBlog = await blogService.create({
-        title,
-        author,
-        url,
-      });
-      setSuccessMessage(
-        `a new blog ${newBlog.title} by ${newBlog.author} added`
-      );
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
-      setBlogs(blogs.concat(newBlog));
-      setTitle("");
-      setAuthor("");
-      setUrl("");
+      const returnedBlog = await blogService.update(id, updatedBlog);
+      setBlogs(blogs.map((blog) => (blog.id !== id ? blog : returnedBlog)));
     } catch (error) {
-      // console.log(error);
       setErrorMessage(error.response.data.error);
       setTimeout(() => {
         setErrorMessage(null);
@@ -64,14 +71,20 @@ const App = () => {
     }
   };
 
-  const handleLogout = () => {
-    window.localStorage.removeItem("loggedBlogAppUser");
-    setAuthor("");
-    setTitle("");
-    setUrl("");
-    setUser(null);
+  const deleteBlog = async (id) => {
+    const blog = blogs.find((blog) => blog.id === id);
+    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+      try {
+        await blogService.remove(id);
+        setBlogs(blogs.filter((blog) => blog.id !== id));
+      } catch (error) {
+        setErrorMessage(error.response.data.error);
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 5000);
+      }
+    }
   };
-
   return (
     <div>
       <Notification message={errorMessage} type="error" />
@@ -90,19 +103,25 @@ const App = () => {
           <h2>blogs</h2>
           {user.name} logged in
           <button onClick={handleLogout}>logout</button>
-          <BlogForm
-            title={title}
-            author={author}
-            url={url}
-            setTitle={setTitle}
-            setAuthor={setAuthor}
-            setUrl={setUrl}
-            handleCreate={handleCreate}
-          />
+          <Togglable buttonLabel="new note" ref={noteFormRef}>
+            <BlogForm
+              addBlog={addBlog}
+              noteFormRef={noteFormRef}
+              setErrorMessage={setErrorMessage}
+              setSuccessMessage={setSuccessMessage}
+            />
+          </Togglable>
           <div>
-            {blogs.map((blog) => (
-              <Blog key={blog.id} blog={blog} />
-            ))}
+            {blogs
+              .sort((b1, b2) => b2.likes - b1.likes)
+              .map((blog) => (
+                <Blog
+                  key={blog.id}
+                  blog={blog}
+                  incrementLike={incrementLike}
+                  deleteBlog={deleteBlog}
+                />
+              ))}
           </div>
         </div>
       )}
