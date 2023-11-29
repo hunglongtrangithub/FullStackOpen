@@ -1,0 +1,17 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyIiwiaWQiOiI2NTY2ODM2MDdmMTQ3Mzc2MTBiYTdmYWUiLCJpYXQiOjE3MDEyNzE0MjMsImV4cCI6MTcwMTI3NTAyM30.tCsZJ2UtJ7xsQ4UIapEmSmZlltjbiL6QI8eKEYoG8p8
+{
+  "title": "Test blog",
+  "author": "Test author",
+  "url": "http://test.com",
+  "likes": 0
+}
+###
+GET http://localhost:3003/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyIiwiaWQiOiI2NTY2ODM2MDdmMTQ3Mzc2MTBiYTdmYWUiLCJpYXQiOjE3MDEyNzE0MjMsImV4cCI6MTcwMTI3NTAyM30.tCsZJ2UtJ7xsQ4UIapEmSmZlltjbiL6QI8eKEYoG8p8
+###
+DELETE http://localhost:3003/api/blogs/656745f34af19b55ba525e67
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyIiwiaWQiOiI2NTY2ODM2MDdmMTQ3Mzc2MTBiYTdmYWUiLCJpYXQiOjE3MDEyNzE0MjMsImV4cCI6MTcwMTI3NTAyM30.tCsZJ2UtJ7xsQ4UIapEmSmZlltjbiL6QI8eKEYoG8p8
