@@ -1,46 +1,22 @@
 import { useState } from "react";
-import blogService from "../services/blogs";
 
-const BlogForm = ({
-  noteFormRef,
-  setErrorMessage,
-  setSuccessMessage,
-  addBlog,
-}) => {
+const BlogForm = ({ onCreateBlog }) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [url, setUrl] = useState("");
   const handleCreate = async (event) => {
-    try {
-      event.preventDefault();
-      noteFormRef.current.toggleVisibility();
-      const newBlog = await blogService.create({
-        title,
-        author,
-        url,
-      });
-      setSuccessMessage(
-        `a new blog ${newBlog.title} by ${newBlog.author} added`
-      );
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
-      addBlog(newBlog);
-      setTitle("");
-      setAuthor("");
-      setUrl("");
-    } catch (error) {
-      setErrorMessage(error.response.data.error);
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
-    }
+    event.preventDefault();
+    await onCreateBlog({ title, author, url });
+    setTitle("");
+    setAuthor("");
+    setUrl("");
   };
   return (
     <form onSubmit={handleCreate}>
       <h2>create new</h2>
       title:
       <input
+        className="title"
         type="text"
         value={title}
         name="Title"
@@ -49,6 +25,7 @@ const BlogForm = ({
       <br />
       author:
       <input
+        className="author"
         type="text"
         value={author}
         name="Author"
@@ -57,13 +34,16 @@ const BlogForm = ({
       <br />
       url:
       <input
+        className="url"
         type="text"
         value={url}
         name="Url"
         onChange={({ target }) => setUrl(target.value)}
       />
       <br />
-      <button type="submit">create</button>
+      <button type="submit" className="send">
+        create
+      </button>
     </form>
   );
 };

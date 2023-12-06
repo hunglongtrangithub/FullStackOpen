@@ -12,13 +12,13 @@ const Blog = ({ blog, incrementLike, deleteBlog }) => {
 
   return !visible ? (
     <div style={blogStyle}>
-      {blog.title} {blog.author}
+      <span>{blog.title}</span> <span>{blog.author}</span>
       <button onClick={() => setVisible(!visible)}>view</button>
     </div>
   ) : (
     <div style={blogStyle}>
       <div>
-        {blog.title} {blog.author}
+        <span>{blog.title}</span> <span>{blog.author}</span>
         <button onClick={() => setVisible(!visible)}>hide</button>
       </div>
       <div>{blog.url}</div>

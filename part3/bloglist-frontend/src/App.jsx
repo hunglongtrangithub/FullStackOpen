@@ -28,8 +28,26 @@ const App = () => {
     }
   }, []);
 
-  const addBlog = (blog) => {
-    setBlogs([...blogs, blog]);
+  // add a new blog to the blog list
+  const onCreateBlog = async (blog) => {
+    try {
+      noteFormRef.current.toggleVisibility();
+      const newBlog = await blogService.create(blog);
+      setSuccessMessage(
+        `a new blog ${newBlog.title} by ${newBlog.author} added`
+      );
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+      setBlogs([...blogs, newBlog]);
+      noteFormRef.current.toggleVisibility();
+    } catch (error) {
+      console.log(error.response.data.error);
+      setErrorMessage(error.response.data.error);
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+    }
   };
 
   // retrieve the blog list from the server
@@ -104,12 +122,7 @@ const App = () => {
           {user.name} logged in
           <button onClick={handleLogout}>logout</button>
           <Togglable buttonLabel="new note" ref={noteFormRef}>
-            <BlogForm
-              addBlog={addBlog}
-              noteFormRef={noteFormRef}
-              setErrorMessage={setErrorMessage}
-              setSuccessMessage={setSuccessMessage}
-            />
+            <BlogForm onCreateBlog={onCreateBlog} />
           </Togglable>
           <div>
             {blogs
