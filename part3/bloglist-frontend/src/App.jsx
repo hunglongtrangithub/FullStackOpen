@@ -15,7 +15,7 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  const noteFormRef = useRef(null); // noteFormRef is a reference to the Togglable component in the BlogForm component to be used to toggle the visibility of the BlogForm component
+  const blogFormRef = useRef(null); // blogFormRef is a reference to the Togglable component in the BlogForm component to be used to toggle the visibility of the BlogForm component
   // retrieve the blog list from the server
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem("loggedBlogAppUser");
@@ -30,16 +30,13 @@ const App = () => {
   // add a new blog to the blog list
   const onCreateBlog = async (blog) => {
     try {
-      noteFormRef.current.toggleVisibility();
-      const newBlog = await blogService.create(blog);
-      setSuccessMessage(
-        `a new blog ${newBlog.title} by ${newBlog.author} added`
-      );
+      await blogService.create(blog);
+      setSuccessMessage(`a new blog ${blog.title} by ${blog.author} added`);
       setTimeout(() => {
         setSuccessMessage(null);
       }, 5000);
-      setBlogs([...blogs, newBlog]);
-      noteFormRef.current.toggleVisibility();
+      blogService.getAll().then((blogs) => setBlogs(blogs));
+      blogFormRef.current.toggleVisibility();
     } catch (error) {
       console.log(error.response.data.error);
       setErrorMessage(error.response.data.error);
@@ -78,8 +75,8 @@ const App = () => {
     const blog = blogs.find((blog) => blog.id === id);
     const updatedBlog = { ...blog, likes: blog.likes + 1 };
     try {
-      const returnedBlog = await blogService.update(id, updatedBlog);
-      setBlogs(blogs.map((blog) => (blog.id !== id ? blog : returnedBlog)));
+      await blogService.update(id, updatedBlog);
+      blogService.getAll().then((blogs) => setBlogs(blogs));
     } catch (error) {
       setErrorMessage(error.response.data.error);
       setTimeout(() => {
@@ -93,7 +90,7 @@ const App = () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
       try {
         await blogService.remove(id);
-        setBlogs(blogs.filter((blog) => blog.id !== id));
+        blogService.getAll().then((blogs) => setBlogs(blogs));
       } catch (error) {
         setErrorMessage(error.response.data.error);
         setTimeout(() => {
@@ -102,6 +99,7 @@ const App = () => {
       }
     }
   };
+
   return (
     <div>
       <Notification message={errorMessage} type="error" />
@@ -120,7 +118,7 @@ const App = () => {
           <h2>blogs</h2>
           {user.username} logged in
           <button onClick={handleLogout}>logout</button>
-          <Togglable buttonLabel="new note" ref={noteFormRef}>
+          <Togglable buttonLabel="create new blog" ref={blogFormRef}>
             <BlogForm onCreateBlog={onCreateBlog} />
           </Togglable>
           <div>
