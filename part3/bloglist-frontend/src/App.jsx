@@ -6,7 +6,6 @@ import Togglable from "./components/Togglable";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
-import "./index.css";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -119,7 +118,7 @@ const App = () => {
       {user && (
         <div>
           <h2>blogs</h2>
-          {user.name} logged in
+          {user.username} logged in
           <button onClick={handleLogout}>logout</button>
           <Togglable buttonLabel="new note" ref={noteFormRef}>
             <BlogForm onCreateBlog={onCreateBlog} />
@@ -133,6 +132,7 @@ const App = () => {
                   blog={blog}
                   incrementLike={incrementLike}
                   deleteBlog={deleteBlog}
+                  currentUser={user}
                 />
               ))}
           </div>
