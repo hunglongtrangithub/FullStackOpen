@@ -52,7 +52,7 @@ describe("Blog app", function () {
         author: "New Author",
         url: "http://url.com",
       };
-      cy.contains("new note").click();
+      cy.contains("create new blog").click();
       cy.get(".title").type(newBlog.title);
       cy.get(".author").type(newBlog.author);
       cy.get(".url").type(newBlog.url);

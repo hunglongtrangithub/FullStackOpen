@@ -9,8 +9,6 @@ import loginService from "./services/login";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [user, setUser] = useState(null); // user state is used to determine whether the user is logged in or not
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -28,7 +26,7 @@ const App = () => {
   }, []);
 
   // add a new blog to the blog list
-  const onCreateBlog = async (blog) => {
+  const handleCreateBlog = async (blog) => {
     try {
       await blogService.create(blog);
       setSuccessMessage(`a new blog ${blog.title} by ${blog.author} added`);
@@ -47,18 +45,14 @@ const App = () => {
   };
 
   // retrieve the blog list from the server
-  const handleLogin = async (event) => {
-    event.preventDefault();
+  const handleLogin = async ({ username, password }) => {
     try {
       const user = await loginService.login({ username, password });
       window.localStorage.setItem("loggedBlogAppUser", JSON.stringify(user));
       setUser(user);
-      setUsername("");
-      setPassword("");
       blogService.setToken(user.token);
       blogService.getAll().then((blogs) => setBlogs(blogs));
     } catch (error) {
-      // console.log(error.response.data.error);
       setErrorMessage(error.response.data.error);
       setTimeout(() => {
         setErrorMessage(null);
@@ -104,22 +98,14 @@ const App = () => {
     <div>
       <Notification message={errorMessage} type="error" />
       <Notification message={successMessage} type="success" />
-      {!user && (
-        <LoginForm
-          handleLogin={handleLogin}
-          username={username}
-          password={password}
-          setUsername={setUsername}
-          setPassword={setPassword}
-        />
-      )}
+      {!user && <LoginForm handleLogin={handleLogin} />}
       {user && (
         <div>
           <h2>blogs</h2>
           {user.username} logged in
           <button onClick={handleLogout}>logout</button>
           <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-            <BlogForm onCreateBlog={onCreateBlog} />
+            <BlogForm handleCreateBlog={handleCreateBlog} />
           </Togglable>
           <div>
             {blogs

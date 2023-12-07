@@ -1,20 +1,20 @@
 import { useState } from "react";
 
-const BlogForm = ({ onCreateBlog }) => {
+const BlogForm = ({ handleCreateBlog }) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [url, setUrl] = useState("");
 
-  const handleCreate = async (event) => {
+  const onCreateBlog = async (event) => {
     event.preventDefault();
-    await onCreateBlog({ title, author, url });
+    await handleCreateBlog({ title, author, url });
     setTitle("");
     setAuthor("");
     setUrl("");
   };
 
   return (
-    <form onSubmit={handleCreate}>
+    <form onSubmit={onCreateBlog}>
       <h2>create new</h2>
       title:
       <input
