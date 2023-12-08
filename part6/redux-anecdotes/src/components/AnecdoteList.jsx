@@ -1,5 +1,9 @@
 import { useSelector, useDispatch } from "react-redux";
-import { voteAction } from "../reducers/anecdoteReducer";
+import { vote } from "../reducers/anecdoteReducer";
+import {
+  clearNotification,
+  displayNotification,
+} from "../reducers/notificationReducer";
 
 const AnecdoteList = () => {
   const anecdotes = useSelector((state) => {
@@ -12,19 +16,24 @@ const AnecdoteList = () => {
   });
   const dispatch = useDispatch();
 
-  const vote = (id) => {
-    dispatch(voteAction(id));
+  const addVote = (id) => {
+    dispatch(vote(id));
+    const content = anecdotes.find((anecdote) => anecdote.id === id).content;
+    dispatch(displayNotification(`you voted '${content}'`));
+    setTimeout(() => {
+      dispatch(clearNotification());
+    }, 5000);
     console.log("vote", id);
   };
-
-  return anecdotes
+  console.log("anecdotes", anecdotes);
+  return [...anecdotes] // copy the array because sort mutates the array
     .sort((a1, a2) => a2.votes - a1.votes)
     .map((anecdote) => (
       <div key={anecdote.id}>
         <div>{anecdote.content}</div>
         <div>
           has {anecdote.votes}
-          <button onClick={() => vote(anecdote.id)}>vote</button>
+          <button onClick={() => addVote(anecdote.id)}>vote</button>
         </div>
       </div>
     ));
