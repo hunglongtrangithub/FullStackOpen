@@ -20,6 +20,12 @@ const noteSlice = createSlice({
       console.log(JSON.parse(JSON.stringify(state)));
       return state.map((note) => (note.id !== id ? note : changedNote));
     },
+    appendNote(state, action) {
+      state.push(action.payload);
+    },
+    setNotes(state, action) {
+      return action.payload;
+    },
   },
 });
 
