@@ -9,10 +9,12 @@ const userSlice = createSlice({
     logIn: (state, action) => {
       const user = action.payload;
       blogService.setToken(user.token);
+      window.localStorage.setItem("loggedBlogAppUser", JSON.stringify(user));
       return user;
     },
     logOut: () => {
       blogService.setToken(null);
+      window.localStorage.removeItem("loggedBlogAppUser");
       return null;
     },
   },

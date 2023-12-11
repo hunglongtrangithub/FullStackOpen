@@ -51,7 +51,7 @@ const App = () => {
   // retrieve the blog list from the server
   const handleLogin = async ({ username, password }) => {
     try {
-      dispatch(signIn({ username, password }));
+      await dispatch(signIn({ username, password }));
       dispatch(initializeBlogs());
     } catch (error) {
       dispatch(setNotification("error", error.response.data.error, 5));
