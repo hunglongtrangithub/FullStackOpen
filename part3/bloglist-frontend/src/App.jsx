@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setNotification } from "./reducers/notificationReducer";
 import {
