@@ -1,25 +1,23 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setNotification } from "./reducers/notificationReducer";
-import {
-  createBlog,
-  likeBlog,
-  removeBlog,
-  initializeBlogs,
-} from "./reducers/blogsReducer";
+import { fetchBlogs } from "./reducers/blogsReducer";
 import { logIn, logOut, signIn } from "./reducers/userReducer";
+import { createBlog, likeBlog, removeBlog } from "./reducers/blogsReducer";
 import LoginForm from "./components/LoginForm";
-import BlogForm from "./components/BlogForm";
 import Notification from "./components/Notification";
-import Togglable from "./components/Togglable";
-import Blog from "./components/Blog";
+import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
+import Blogs from "./routes/Blogs";
+import Users from "./routes/Users";
+import UserDetail from "./routes/UserDetail";
+import BlogDetail from "./routes/BlogDetail";
 
 const App = () => {
+  const navigate = useNavigate();
   const notification = useSelector((state) => state.notification);
   const user = useSelector((state) => state.user);
   const blogs = useSelector((state) => state.blogs);
   const dispatch = useDispatch();
-  const blogFormRef = useRef(null); // blogFormRef is a reference to the Togglable component in the BlogForm component to be used to toggle the visibility of the BlogForm component
 
   // retrieve the blog list from the server
   useEffect(() => {
@@ -27,10 +25,24 @@ const App = () => {
     if (loggedUserJSON) {
       const loggedUser = JSON.parse(loggedUserJSON);
       dispatch(logIn(loggedUser));
-      dispatch(initializeBlogs());
+      dispatch(fetchBlogs());
     }
   }, []);
 
+  // retrieve the blog list from the server
+  const handleLogin = async ({ username, password }) => {
+    try {
+      await dispatch(signIn({ username, password }));
+      dispatch(fetchBlogs());
+      navigate("/");
+    } catch (error) {
+      dispatch(setNotification("error", error.response.data.error, 5));
+    }
+  };
+
+  const handleLogout = () => {
+    dispatch(logOut());
+  };
   // add a new blog to the blog list
   const handleCreateBlog = async (blog) => {
     try {
@@ -46,20 +58,6 @@ const App = () => {
     } catch (error) {
       dispatch(setNotification("error", error.response.data.error, 5));
     }
-  };
-
-  // retrieve the blog list from the server
-  const handleLogin = async ({ username, password }) => {
-    try {
-      await dispatch(signIn({ username, password }));
-      dispatch(initializeBlogs());
-    } catch (error) {
-      dispatch(setNotification("error", error.response.data.error, 5));
-    }
-  };
-
-  const handleLogout = () => {
-    dispatch(logOut());
   };
 
   const incrementLike = async (id) => {
@@ -88,25 +86,47 @@ const App = () => {
       {!user && <LoginForm handleLogin={handleLogin} />}
       {user && (
         <div>
+          <nav style={{ backgroundColor: "#a0a0a0", padding: "10px" }}>
+            <Link to="/" style={{ color: "#000000", marginRight: "10px" }}>
+              Blogs
+            </Link>
+            <Link to="/users" style={{ color: "#000000", marginRight: "10px" }}>
+              Users
+            </Link>
+            <span style={{ color: "#000000", marginRight: "10px" }}>
+              {user.username} logged in
+            </span>
+            <button onClick={handleLogout} style={{ marginRight: "10px" }}>
+              logout
+            </button>
+          </nav>
           <h2>blogs</h2>
-          {user.username} logged in
-          <button onClick={handleLogout}>logout</button>
-          <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-            <BlogForm handleCreateBlog={handleCreateBlog} />
-          </Togglable>
-          <div>
-            {[...blogs]
-              .sort((b1, b2) => b2.likes - b1.likes)
-              .map((blog) => (
-                <Blog
-                  key={blog.id}
-                  blog={blog}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Blogs
+                  user={user}
+                  blogs={blogs}
+                  incrementLike={incrementLike}
+                  deleteBlog={deleteBlog}
+                  handleCreateBlog={handleCreateBlog}
+                />
+              }
+            />
+            <Route path="/users" element={<Users />} />
+            <Route path="/users/:id" element={<UserDetail />} />
+            <Route
+              path="/blogs/:id"
+              element={
+                <BlogDetail
                   incrementLike={incrementLike}
                   deleteBlog={deleteBlog}
                   currentUser={user}
                 />
-              ))}
-          </div>
+              }
+            />
+          </Routes>
         </div>
       )}
     </div>

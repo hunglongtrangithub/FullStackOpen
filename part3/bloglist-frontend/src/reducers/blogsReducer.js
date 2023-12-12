@@ -22,7 +22,7 @@ const blogsSlice = createSlice({
   },
 });
 
-export const initializeBlogs = () => {
+export const fetchBlogs = () => {
   return async (dispatch) => {
     const blogs = await blogService.getAll();
     dispatch(setBlogs(blogs));
@@ -50,6 +50,13 @@ export const removeBlog = (blog) => {
   return async (dispatch) => {
     await blogService.remove(blog.id);
     dispatch(deleteBlog(blog.id));
+  };
+};
+
+export const addComment = (id, comment) => {
+  return async (dispatch) => {
+    const updatedBlog = await blogService.addComment(id, comment);
+    dispatch(updateBlog(updatedBlog));
   };
 };
 

@@ -25,6 +25,7 @@ blogsRouter.post("/", async (request, response) => {
   });
 
   const savedBlog = await blog.save();
+  await savedBlog.populate("user", { username: 1, name: 1 });
 
   user.blogs = user.blogs.concat(savedBlog._id);
   await user.save();
@@ -67,8 +68,25 @@ blogsRouter.put("/:id", async (request, response) => {
     new: true,
     runValidators: true,
     context: "query",
-  });
+  }).populate("user", { username: 1, name: 1 });
+
   response.json(updatedblog);
+});
+
+blogsRouter.post("/:id/comments", async (request, response) => {
+  const { id } = request.params;
+  const { comment } = request.body;
+
+  const blog = await Blog.findById(id);
+  if (!blog) {
+    return response.status(404).json({ error: "Blog not found" });
+  }
+
+  blog.comments = blog.comments.concat(comment);
+
+  const updatedBlog = await blog.save();
+
+  response.json(updatedBlog);
 });
 
 module.exports = blogsRouter;
