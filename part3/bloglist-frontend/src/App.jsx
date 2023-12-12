@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setNotification } from "./reducers/notificationReducer";
 import { fetchBlogs } from "./reducers/blogsReducer";
@@ -6,7 +6,7 @@ import { logIn, logOut, signIn } from "./reducers/userReducer";
 import { createBlog, likeBlog, removeBlog } from "./reducers/blogsReducer";
 import LoginForm from "./components/LoginForm";
 import Notification from "./components/Notification";
-import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import Blogs from "./routes/Blogs";
 import Users from "./routes/Users";
 import UserDetail from "./routes/UserDetail";
@@ -43,10 +43,12 @@ const App = () => {
   const handleLogout = () => {
     dispatch(logOut());
   };
+
+  const blogFormRef = useRef(null); // blogFormRef is a reference to the Togglable component in the BlogForm component to be used to toggle the visibility of the BlogForm component
   // add a new blog to the blog list
   const handleCreateBlog = async (blog) => {
     try {
-      dispatch(createBlog(blog));
+      await dispatch(createBlog(blog));
       dispatch(
         setNotification(
           "success",
@@ -63,7 +65,7 @@ const App = () => {
   const incrementLike = async (id) => {
     const blog = blogs.find((blog) => blog.id === id);
     try {
-      dispatch(likeBlog(blog));
+      await dispatch(likeBlog(blog));
     } catch (error) {
       dispatch(setNotification("error", error.response.data.error, 5));
     }
@@ -73,7 +75,7 @@ const App = () => {
     const blog = blogs.find((blog) => blog.id === id);
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
       try {
-        dispatch(removeBlog(blog));
+        await dispatch(removeBlog(blog));
       } catch (error) {
         dispatch(setNotification("error", error.response.data.error, 5));
       }
@@ -86,17 +88,15 @@ const App = () => {
       {!user && <LoginForm handleLogin={handleLogin} />}
       {user && (
         <div>
-          <nav style={{ backgroundColor: "#a0a0a0", padding: "10px" }}>
-            <Link to="/" style={{ color: "#000000", marginRight: "10px" }}>
+          <nav className="navbar">
+            <Link to="/" className="navbar-btn">
               Blogs
             </Link>
-            <Link to="/users" style={{ color: "#000000", marginRight: "10px" }}>
+            <Link to="/users" className="navbar-btn">
               Users
             </Link>
-            <span style={{ color: "#000000", marginRight: "10px" }}>
-              {user.username} logged in
-            </span>
-            <button onClick={handleLogout} style={{ marginRight: "10px" }}>
+            <span className="">{user.username} logged in</span>
+            <button onClick={handleLogout} className="logout-btn">
               logout
             </button>
           </nav>
@@ -111,6 +111,7 @@ const App = () => {
                   incrementLike={incrementLike}
                   deleteBlog={deleteBlog}
                   handleCreateBlog={handleCreateBlog}
+                  blogFormRef={blogFormRef}
                 />
               }
             />

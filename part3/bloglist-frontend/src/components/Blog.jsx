@@ -14,7 +14,7 @@ const Blog = ({ blog, incrementLike, deleteBlog, currentUser }) => {
   if (!visible) {
     return (
       <div style={blogStyle} className="blog">
-        <Link to={`/blogs/${blog.id}`}>
+        <Link to={`/blogs/${blog.id}`} className="link">
           {blog.title} {blog.author}
         </Link>
         <button className="view" onClick={() => setVisible(!visible)}>
@@ -26,7 +26,7 @@ const Blog = ({ blog, incrementLike, deleteBlog, currentUser }) => {
     return (
       <div style={blogStyle} className="blog">
         <div>
-          <Link to={`/blogs/${blog.id}`}>
+          <Link to={`/blogs/${blog.id}`} className="link">
             {blog.title} {blog.author}
           </Link>
           <button className="hide" onClick={() => setVisible(!visible)}>
